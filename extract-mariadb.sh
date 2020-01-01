@@ -1,8 +1,10 @@
 #!/bin/bash
 
+src_dir="/usr/local/src/mdb-backup"
 log_file="extract-progress.log"
-source "$(dirname "$0")/config.sh"
-source "$(dirname "$0")/lib.sh"
+
+source "${src_dir}/config.sh"
+source "${src_dir}/lib.sh"
 
 number_of_args="${#}"
 

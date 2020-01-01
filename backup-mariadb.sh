@@ -1,11 +1,14 @@
 #!/bin/bash
 
-source "$(dirname "$0")/config.sh"
-todays_dir="${parent_dir}/$(date +%F)"
+src_dir="/usr/local/src/mdb-backup"
 log_file="${todays_dir}/backup-progress.log"
+
+source "${src_dir}/config.sh"
+
+todays_dir="${parent_dir}/$(date +%F)"
 now="$(date +%m-%d-%Y_%H-%M-%S)"
 
-source "$(dirname "$0")/lib.sh"
+source "${src_dir}/lib.sh"
 
 sanity_check () {
     check_backup_user

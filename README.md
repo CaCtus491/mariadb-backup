@@ -155,34 +155,34 @@ You can download the scripts directly from GitHub by typing:
 
 ```
 $ cd /tmp
-$ curl -LO https://raw.githubusercontent.com/nullart/debian-ubuntu-mariadb-backup/master/backup-mysql.sh
-$ curl -LO https://raw.githubusercontent.com/nullart/debian-ubuntu-mariadb-backup/master/extract-mysql.sh
-$ curl -LO https://raw.githubusercontent.com/nullart/debian-ubuntu-mariadb-backup/master/prepare-mysql.sh
+$ wget https://raw.githubusercontent.com/dlimkin/mdb-backup/master/backup-mariadb.sh
+$ wget https://raw.githubusercontent.com/dlimkin/mdb-backup/master/extract-mariadb.sh
+$ wget https://raw.githubusercontent.com/dlimkin/mdb-backup/master/prepare-mariadb.sh
 ```
 
 Be sure to inspect the scripts after downloading to make sure they were retrieved successfully and that you approve of the actions they will perform. If you are satisfied, mark the scripts as executable and then move them into the /usr/local/bin directory by typing:
 
 ```
-$ chmod +x /tmp/{backup,extract,prepare}-mysql.sh
-$ sudo mv /tmp/{backup,extract,prepare}-mysql.sh /usr/local/bin
+$ chmod +x /tmp/{backup,extract,prepare}-mariadb.sh
+$ sudo mv /tmp/{backup,extract,prepare}-mariadb.sh /usr/local/bin
 ```
 
 ## Using the Backup and Restore Scripts
 
 In order to make our backup and restore steps repeatable, we will script the entire process. We will use the following scripts:
 
-* backup-mysql.sh: This script backs up the MySQL databases, encrypting and compressing the files in the process. It creates full and incremental backups and automatically organizes content by day. By default, the script maintains 3 days worth of backups.
-* extract-mysql.sh: This script decompresses and decrypts the backup files to create directories with the backed up content.
-* prepare-mysql.sh: This script "prepares" the back up directories by processing the files and applying logs. Any incremental backups are applied to the full backup. Once the prepare script finishes, the files are ready to be moved back to the data directory.
+* backup-mariadb.sh: This script backs up the MySQL databases, encrypting and compressing the files in the process. It creates full and incremental backups and automatically organizes content by day. By default, the script maintains 3 days worth of backups.
+* extract-mariadb.sh: This script decompresses and decrypts the backup files to create directories with the backed up content.
+* prepare-mariadb.sh: This script "prepares" the back up directories by processing the files and applying logs. Any incremental backups are applied to the full backup. Once the prepare script finishes, the files are ready to be moved back to the data directory.
 
 Be sure to inspect the scripts after downloading to make sure they were retrieved successfully and that you approve of the actions they will perform. If you are satisfied, mark the scripts as executable and then move them into the ```/usr/local/bin``` directory by typing:
 
 ```
-$ chmod +x /tmp/{backup,extract,prepare}-mysql.sh
-$ sudo mv /tmp/{backup,extract,prepare}-mysql.sh /usr/local/bin
+$ chmod +x /tmp/{backup,extract,prepare}-mariadb.sh
+$ sudo mv /tmp/{backup,extract,prepare}-mariadb.sh /usr/local/bin
 ```
 
-### The backup-mysql.sh Script
+### The backup-mariadb.sh Script
 
 The script has the following functionality:
 
@@ -194,15 +194,15 @@ When the script is run, a daily directory is created where timestamped files rep
 
 Backups will generate a file called backup-progress.log in the daily directory with the output from the most recent backup operation. A file called xtrabackup_checkpoints containing the most recent backup metadata will be created there as well. This file is needed to produce future incremental backups, so it is important not to remove it. A file called xtrabackup_info, which contains additional metadata, is also produced but the script does not reference this file.
 
-### The extract-mysql.sh Script
+### The extract-mariadb.sh Script
 
-Unlike the backup-mysql.sh script, which is designed to be automated, this script is designed to be used intentionally when you plan to restore from a backup. Because of this, the script expects you to pass in the .xbstream files that you wish to extract.
+Unlike the backup-mariadb.sh script, which is designed to be automated, this script is designed to be used intentionally when you plan to restore from a backup. Because of this, the script expects you to pass in the .xbstream files that you wish to extract.
 
 The script creates a restore directory within the current directory and then creates individual directories within for each of the backups passed in as arguments. It will process the provided .xbstream files by extracting directory structure from the archive, decrypting the individual files within, and then decompressing the decrypted files.
 
 After this process has completed, the restore directory should contain directories for each of the provided backups. This allows you to inspect the directories, examine the contents of the backups, and decide which backups you wish to prepare and restore.
 
-### The prepare-mysql.sh Script
+### The prepare-mariadb.sh Script
 
 This script will apply the logs to each backup to create a consistent database snapshot. It will apply any incremental backups to the full backup to incorporate the later changes.
 
@@ -217,7 +217,7 @@ In order to minimize chance of data loss, the script stops short of copying the 
 ### Perform a Full Backup
 
 ```
-$ sudo -u backup backup-mysql.sh
+$ sudo -u backup backup-mariadb.sh
 
 Backup successful!
 Backup created at /backups/mysql/Thu/full-04-20-2017_14-55-17.xbstream
@@ -280,10 +280,10 @@ We should add some data to our database before taking another backup so that we 
 
 Insert another record into the equipment table of our playground database representing 10 yellow swings. You will be prompted for the MySQL administrative password during this process.
 
-Now that there is more current data than our most recent backup, we can take an incremental backup to capture the changes. The backup-mysql.sh script will take an incremental backup if a full backup for the same day exists:
+Now that there is more current data than our most recent backup, we can take an incremental backup to capture the changes. The backup-mariadb.sh script will take an incremental backup if a full backup for the same day exists:
 
 ```
-$ sudo -u backup backup-mysql.sh
+$ sudo -u backup backup-mariadb.sh
 
 Backup successful!
 Backup created at /backups/mysql/Thu/incremental-04-20-2017_17-15-03.xbstream
@@ -318,10 +318,10 @@ The backup type is listed as "incremental" and instead of starting from LSN 0 li
 
 Next, let's extract the backup files to create backup directories. Due to space and security considerations, this should normally only be done when you are ready to restore the data.
 
-We can extract the backups by passing the .xbstream backup files to the extract-mysql.sh script. Again, this must be run by the backup user:
+We can extract the backups by passing the .xbstream backup files to the extract-mariadb.sh script. Again, this must be run by the backup user:
 
 ```
-$ sudo -u backup extract-mysql.sh *.xbstream
+$ sudo -u backup extract-mariadb.sh *.xbstream
 
 Extraction complete! Backup directories have been extracted to the "restore" directory.
 
@@ -364,10 +364,10 @@ Next, we will prepare the backup files. To do so, you must be in the restore dir
 
 If for any reason you don't want to restore some of the changes, now is your last chance to remove those incremental backup directories from the restore directory (the incremental backup files will still be available in the parent directory). Any remaining incremental- directories within the current directory will be applied to the full- backup directory.
 
-When you are ready, call the prepare-mysql.sh script. Again, make sure you are in the restore directory where your individual backup directories are located:
+When you are ready, call the prepare-mariadb.sh script. Again, make sure you are in the restore directory where your individual backup directories are located:
 
 ```
-$ sudo -u backup prepare-mysql.sh
+$ sudo -u backup prepare-mariadb.sh
 
 Backup looks to be fully prepared.  Please check the "prepare-progress.log" file
 to verify before continuing.
@@ -397,7 +397,7 @@ The script stops short of actually copying the files into MySQL's data directory
 
 ### Restore the Backup Data to the MySQL Data Directory
 
-If you are satisfied that everything is in order after reviewing the logs, you can follow the instructions outlined in the prepare-mysql.sh output.
+If you are satisfied that everything is in order after reviewing the logs, you can follow the instructions outlined in the prepare-mariadb.sh output.
 
 First, stop the running MySQL process:
 
@@ -461,7 +461,7 @@ Inside, we will call the backup script with the systemd-cat utility so that the 
 
 ```
 #!/bin/bash
-sudo -u backup systemd-cat --identifier=backup-mysql /usr/local/bin/backup-mysql.sh
+sudo -u backup systemd-cat --identifier=backup-mysql /usr/local/bin/backup-mariadb.sh
 ```
 
 Save and close the file when you are finished. Make the script executable by typing:
