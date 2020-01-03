@@ -1,5 +1,8 @@
 # Debian / Ubuntu 16.04 MariaDB backup using mariabackup
-*Currently tested with Debian 8 (jessie)*
+
+RU: https://www.8host.com/blog/nastrojka-rezervnogo-kopirovaniya-mysql-s-pomoshhyu-percona-xtrabackup-v-ubuntu-16-04/
+
+*Currently tested with Debian 10*
 
 This repository contains a few scripts for automating backups with mariabackup (a fork of Percona Xtrabackup) by MariaDB.
 
