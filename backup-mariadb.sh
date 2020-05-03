@@ -11,9 +11,9 @@ sanity_check () {
     check_backup_user
 
     # Check whether the encryption key file is available
-    #if [ ! -r "${encryption_key_file}" ]; then
-    #    error "Cannot read encryption key at ${encryption_key_file}"
-    #fi
+    if [ ! -r "${encryption_key_file}" ]; then
+        error "Cannot read encryption key at ${encryption_key_file}"
+    fi
 }
 
 set_options () {
@@ -28,6 +28,13 @@ set_options () {
         "--compress-threads=${processors}"
     )
     mariabackup_args+=($extra_backup_args)
+	
+	# List the openssl arguments
+    openssl_args=(
+        "-aes-256-cbc"
+        "-pbkdf2"
+        "-pass=file:${encryption_key_file}"
+    )
 
     backup_type="full"
 
@@ -59,8 +66,8 @@ prepare_backup_dir() {
 take_backup () {
     run find "${todays_dir}" -type f -name "*.incomplete" -delete ||\
         error "deleting *.incomplete failed"
-
-    run mariabackup "${mariabackup_args[@]}" > "${todays_dir}/${backup_type}-${now}.xbstream.incomplete" \
+					
+    run mariabackup "${mariabackup_args[@]}" | openssl enc "${openssl_args[@]}" > "${todays_dir}/${backup_type}-${now}.xbstream.incomplete" \
         || error "mariabackup failed"
 
     run mv "${todays_dir}/${backup_type}-${now}.xbstream.incomplete" "${todays_dir}/${backup_type}-${now}.xbstream" \
