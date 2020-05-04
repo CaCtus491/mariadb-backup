@@ -1,10 +1,9 @@
 #!/bin/bash
 
-src_dir="/usr/local/src/mdb-backup"
 log_file="extract-progress.log"
 
-source "${src_dir}/config.sh"
-source "${src_dir}/lib.sh"
+source "$(dirname "$0")/config.sh"
+source "$(dirname "$0")/lib.sh"
 
 number_of_args="${#}"
 
@@ -22,12 +21,20 @@ sanity_check () {
     fi
 
     # Check whether the encryption key file is available
-    #if [ ! -r "${encryption_key_file}" ]; then
-    #    error "Cannot read encryption key at ${encryption_key_file}"
-    #fi
+    if [ ! -r "${encryption_key_file}" ]; then
+        error "Cannot read encryption key at ${encryption_key_file}"
+    fi
 }
 
 do_extraction () {
+	# List the openssl arguments
+    openssl_args=(
+        "-d"
+        "-aes-256-cbc"
+        "-pbkdf2"
+        "-pass=file:${encryption_key_file}"
+    )
+
     for file in "${@}"; do
         base_filename="$(basename "${file%.xbstream}")"
         restore_dir="./restore/${base_filename}"
@@ -38,7 +45,7 @@ do_extraction () {
         mbstream_output="$(mktemp)"
         run mkdir --verbose -p "${restore_dir}" >&$log ||\
             error "mkdir ${restore_dir} failed"
-        run mbstream -v -x -C "${restore_dir}" < "${file}" > >(tee "$mbstream_output" >&$log) 2>&1 ||\
+        run openssl enc "${openssl_args[@]}" -in "${file}" | mbstream -v -x -C "${restore_dir}" > >(tee "$mbstream_output" >&$log) 2>&1 ||\
             error "mbstream failed"
             #"--decrypt=AES256"
             #"--encrypt-key-file=${encryption_key_file}"

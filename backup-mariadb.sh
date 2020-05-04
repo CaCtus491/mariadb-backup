@@ -1,8 +1,7 @@
 #!/bin/bash
 
-src_dir="/usr/local/src/mdb-backup"
-
-source "${src_dir}/config.sh"
+source "$(dirname "$0")/config.sh"
+source "$(dirname "$0")/lib.sh"
 
 todays_dir="${parent_dir}/$(date +%F)"
 log_file="${todays_dir}/backup-progress.log"
